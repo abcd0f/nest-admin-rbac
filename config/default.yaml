@@ -1,0 +1,107 @@
+# ============================================================
+# 配置基线层 —— 所有环境共享，入库。
+#
+# 约定：
+#   - 键名全小写 kebab-case，层级与最终 Config 对象一致
+#   - 不用的项直接删掉或注释，缺失时走代码里的默认值
+#   - 每新增一个配置的时候都需要对应的注释
+# ============================================================
+
+app:
+  # HTTP 服务端口
+  port: 3000
+  # 全局 API 前缀，例如 api 或 api/v1
+  api-prefix: api
+
+api-decrypt:
+  # API 报文 AES/RSA 加解密总开关；开启后必须配置密钥
+  enabled: true
+  # RSA 加密临时 AES 密钥时使用的请求/响应头
+  header-flag: encrypt-key
+  # RSA 私钥用于解开客户端请求头携带的临时 AES 密钥
+  # 公私钥仅放入 config/<环境>.local.yaml 或部署密钥挂载，不要提交真实密钥
+  private-key: MIIBVAIBADANBgkqhkiG9w0BAQEFAASCAT4wggE6AgEAAkEAqhHyZfSsYourNxaY7Nt+PrgrxkiA50efORdI5U5lsW79MmFnusUA355oaSXcLhu5xxB38SMSyP2KvuKNPuH3owIDAQABAkAfoiLyL+Z4lf4Myxk6xUDgLaWGximj20CUf+5BKKnlrK+Ed8gAkM0HqoTt2UZwA5E2MzS4EI2gjfQhz5X28uqxAiEA3wNFxfrCZlSZHb0gn2zDpWowcSxQAgiCstxGUoOqlW8CIQDDOerGKH5OmCJ4Z21v+F25WaHYPxCFMvwxpcw99EcvDQIgIdhDTIqD2jfYjPTY8Jj3EDGPbH2HHuffvflECt3Ek60CIQCFRlCkHpi7hthhYhovyloRYsM+IS9h/0BzlEAuO0ktMQIgSPT3aFAgJYwKpqRYKlLDVcflZFCKY7u3UP8iWi1Qw0Y=
+  # RSA 公钥用于响应加密时封装临时 AES 密钥
+  public-key: MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBAJnNwrj4hi/y3CCJu868ghCG5dUj8wZK++RNlTLcXoMmdZWEQ/u02RgD5LyLAXGjLOjbMtC+/J9qofpSGTKSx/MCAwEAAQ==
+
+redis:
+  # 渐进接入：默认不缓存，也不创建 Redis 连接；启用后 Redis 连接失败将阻止启动
+  enabled: false
+  # 默认缓存时长，单位毫秒；1..2147483647，禁止 0/永久缓存
+  ttl: 60000
+  # 单机 Redis 地址，独立环境使用各自的差异层覆盖
+  host: 127.0.0.1
+  # TCP 端口，1..65535
+  port: 6379
+  # ACL 用户名可选；凭据仅放在不入库的 <环境>.local.yaml 或挂载的配置中
+  # username: cache-user
+  # password: 由部署平台注入，不要提交真实密码
+  # 数据库编号，非负整数；服务器必须已配置该数据库
+  db: 0
+  # Keyv 命名空间；最终键形如 nest-admin:cache:users:v1:42，不要添加末尾冒号
+  key-prefix: nest-admin:cache
+  # 首次建立连接的超时，单位毫秒，必须为正整数
+  connect-timeout: 2000
+  # 单条命令的超时，单位毫秒，必须为正整数
+  command-timeout: 1000
+  # 每条待执行命令的最大重试次数，非负整数；故障期间不接受离线排队
+  max-retries-per-request: 0
+  # 运行期重连的线性退避基数，1..30000 毫秒，间隔最多 30000 毫秒
+  retry-delay: 1000
+  # 启用 TLS 时校验服务器证书；私有 CA 使用 Node 的 NODE_EXTRA_CA_CERTS
+  tls-enabled: false
+
+database:
+  # 且启动时不会报配置错误（结构是合法的），请务必确认本地文件已建好。
+  url: postgresql://USER:PASSWORD@localhost:5432/DATABASE?schema=public
+  pool:
+    # 单实例最大连接数。总连接数 = 实例数 × max，不要超过 PostgreSQL 的 max_connections
+    max: 10
+    # 空闲连接回收时间（毫秒）
+    idle-timeout: 10000
+    # 建立连接超时（毫秒）
+    connect-timeout: 5000
+  # 是否打印 SQL 日志。生产环境务必保持 false
+  log-queries: false
+
+logger:
+  # 全局最低日志级别：trace / debug / info / warn / error / fatal
+  level: info
+  console:
+    # 是否输出到控制台
+    enabled: true
+    # 是否使用彩色可读输出；false 时输出 JSON
+    pretty: true
+  file:
+    # 同时启用主日志与独立 error 文件
+    enabled: true
+    # 日志目录，相对进程工作目录；每个进程须独占此目录
+    directory: logs/gateway
+    # 每类日志的单文件轮转阈值，单位 MB
+    size-mb: 20
+    # 按 hourly / daily / weekly 轮转，同时满足大小轮转
+    frequency: daily
+    # 每类文件最多保留的数量，包含活动文件；不是保留天数
+    max-files: 15
+
+swagger:
+  # 是否启用 Swagger UI 及 JSON/YAML 文档；生产环境在 production.yaml 中关闭
+  enabled: true
+  # 文档路径，自动加上 app.api-prefix；默认 /api/docs
+  path: docs
+  # 文档标题
+  title: Nest Admin API
+  # 文档说明
+  description: Nest Admin 接口文档
+  # API 文档版本
+  version: 1.0.0
+
+throttler:
+  # 是否启用全部 HTTP 接口的限流；关闭后局部装饰器也不生效
+  enabled: true
+  # 同一客户端对每个接口的计数有效期，单位毫秒
+  ttl: 60000
+  # 在有效期内允许的请求数量
+  limit: 100
+  # 超限后的封禁时长，单位毫秒；省略时使用接口生效的 ttl，0 表示不附加封禁
+  # block-duration: 60000

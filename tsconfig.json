@@ -1,0 +1,75 @@
+{
+  "compilerOptions": {
+    "incremental": true,
+    "target": "ES2023",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "paths": {
+      "@app/cache": [
+        "./libs/cache/src/index.ts"
+      ],
+      "@app/cache/*": [
+        "./libs/cache/src/*"
+      ],
+      "@app/crypto": [
+        "./libs/crypto/src/index.ts"
+      ],
+      "@app/crypto/*": [
+        "./libs/crypto/src/*"
+      ],
+      "@app/common": [
+        "./libs/common/src/index.ts"
+      ],
+      "@app/common/*": [
+        "./libs/common/src/*"
+      ],
+      "@app/config": [
+        "./libs/config/src/index.ts"
+      ],
+      "@app/config/*": [
+        "./libs/config/src/*"
+      ],
+      "@app/core": [
+        "./libs/core/src/index.ts"
+      ],
+      "@app/core/*": [
+        "./libs/core/src/*"
+      ],
+      "@app/database": [
+        "./libs/database/src/index.ts"
+      ],
+      "@app/database/*": [
+        "./libs/database/src/*"
+      ],
+      "@app/logger": [
+        "./libs/logger/src/index.ts"
+      ],
+      "@app/logger/*": [
+        "./libs/logger/src/*"
+      ],
+      "@app/swagger": [
+        "./libs/swagger/src/index.ts"
+      ],
+      "@app/swagger/*": [
+        "./libs/swagger/src/*"
+      ]
+    },
+    "resolvePackageJsonExports": true,
+    "types": [
+      "vitest/globals",
+      "node"
+    ],
+    "strict": true,
+    "strictPropertyInitialization": false,
+    "declaration": true,
+    "outDir": "./dist",
+    "removeComments": true,
+    "sourceMap": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "skipLibCheck": true
+  }
+}
