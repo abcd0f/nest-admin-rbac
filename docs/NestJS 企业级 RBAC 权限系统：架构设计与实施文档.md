@@ -39,7 +39,7 @@
 
 | 领域       | 选型                                | 说明                                                                                                                      |
 | ---------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| 运行时     | Node.js 22.22.0                     | 当前 `.node-version` 指定版本；部署与 CI 按实际依赖的 engines 校验兼容性                                                  |
+| 运行时     | Node.js 22.22.0                     | 当前 `.node-version` 指定版本；部署时按实际依赖的 engines 校验兼容性                                                      |
 | 框架       | NestJS 12 + TypeScript 6 strict     | 项目使用 `type: module`、`module/moduleResolution: nodenext`；相对导入带 `.js` 后缀；沿用 Nest CLI 多项目结构             |
 | ORM        | Prisma 7 + PostgreSQL               | generator 用 prisma-client 并显式指定 output；连接 URL 配在 prisma.config.ts；必须经 @prisma/adapter-pg 驱动适配器连接    |
 | Redis      | 单个共享 Redis 服务                 | 复用 `libs/cache` 的 Redis endpoint 与连接；补充强一致原子命令和 Throttler 存储适配器；按键前缀隔离业务，不按用途拆 Redis |
@@ -373,7 +373,7 @@ CREATE UNIQUE INDEX uk_sys_menu_perms ON sys_menu(perms) WHERE perms IS NOT NULL
 - 已有 `prisma.config.ts` 读取 `libs/config` 同一套 YAML，设置 schema 路径 `prisma/`、迁移目录和 CLI datasource URL；尚未登记 seed 命令。
 - 已通过 `libs/database/src/prisma.service.ts` 的 `PrismaPg` adapter 创建运行时 Prisma Client，连接池及 schema 来自 `libs/config`。
 - schema generator 使用 `prisma-client`，output 为 `libs/database/src/generated/prisma`，生成客户端以 ESM TypeScript 方式供代码导入。
-- `package.json` 已提供 `db:generate`、`db:migrate`、`db:deploy`、`db:reset`、`db:push` 和 `db:studio`；seed、CI 流水线尚未配置。
+- `package.json` 已提供 `db:generate`、`db:migrate`、`db:deploy`、`db:reset`、`db:push` 和 `db:studio`；seed 尚未配置。
 
 ## 5. 权限模型（目标设计）
 
@@ -727,7 +727,7 @@ this.events.emit('rbac.session.revoke', { userId: '123' }); // 停用、删除�
 
 | Phase | 名称                 | 依赖    | 预估 | 核心产出                               |
 | ----- | -------------------- | ------- | ---- | -------------------------------------- |
-| 0     | 现状盘点与脚手架补齐 | 无      | 1    | 补齐健康检查、校验管线、部署与 CI 缺口 |
+| 0     | 现状盘点与脚手架补齐 | 无      | 1    | 补齐健康检查、校验管线缺口             |
 | 1     | 数据层               | 0       | 1    | RBAC schema、迁移、seed、软删除扩展    |
 | 2     | 基础设施补齐         | 0       | 1    | 在现有 libs 上补齐缺口                 |
 | 3     | 认证                 | 1、2    | 2    | 登录、刷新、登出、会话、JwtAuthGuard   |
@@ -737,7 +737,7 @@ this.events.emit('rbac.session.revoke', { userId: '123' }); // 停用、删除�
 | 7     | 用户管理             | 5、6    | 2    | 用户 CRUD、关联维护、密码管理          |
 | 8     | 数据权限             | 7       | 2    | buildWhere、各接口接入、授权边界       |
 | 9     | 审计与在线用户       | 3、4    | 1.5  | 操作日志、登录日志、强退               |
-| 10    | 加固与交付           | 全部    | 2    | 路由扫描测试、压测、部署、文档         |
+| 10    | 加固与交付           | 全部    | 2    | 路由扫描测试、压测、部署说明、文档     |
 
 ### 11.3 各阶段任务与完成标准
 
@@ -746,10 +746,10 @@ this.events.emit('rbac.session.revoke', { userId: '123' }); // 停用、删除�
 - 核对运行环境：Node.js 20.19+ 或 22.12+、NestJS 12、Prisma 7；确认 apps/gateway 能正常启动，并记录当前工程是 CommonJS 还是 ESM，后续代码风格与之保持一致。
 - Prisma 7、`prisma.config.ts`、adapter、生成目录、迁移脚本和 Vitest 配置已经存在；本阶段不重复实现。需要补充的是 seed 命令、数据库/RBAC 配置项及可重复执行的环境说明。
 - 当前配置校验由 `libs/config/src/core` 的配置域解析器完成，不是 class-validator 环境变量类。新增 JWT 和管理员初始密码配置时沿用现有 domain 模式，并为缺失配置写测试。
-- 当前没有全局 `ValidationPipe`、`GET /health`、Docker Compose 或 CI 配置；补齐前先确认部署环境和数据库测试策略。
-- 核对 e2e：`test/app.e2e-spec.ts`、`test/cache.e2e-spec.ts`、`test/crypto.e2e-spec.ts` 已覆盖基础链路，但依赖数据库/Redis 的场景必须明确是否使用本地服务或独立测试容器。
+- 当前没有全局 `ValidationPipe`、`GET /health`；补齐前先确认本地数据库测试策略。
+- 核对 e2e：`test/app.e2e-spec.ts`、`test/cache.e2e-spec.ts`、`test/crypto.e2e-spec.ts` 已覆盖基础链路，但依赖数据库/Redis 的场景必须明确是否使用本地服务或独立测试实例。
 
-**完成标准**：保留现有启动、Prisma adapter、基础库测试全绿；新增配置缺失测试、`/health` 冒烟测试和部署/CI 文档后，再将 Phase 0 标为完成。不要把已经存在的 Prisma/Vitest 接入重复记为待办。
+**完成标准**：保留现有启动、Prisma adapter、基础库测试全绿；新增配置缺失测试与 `/health` 冒烟测试后，再将 Phase 0 标为完成。不要把已经存在的 Prisma/Vitest 接入重复记为待办。
 
 #### Phase 1 数据层
 
@@ -840,7 +840,7 @@ this.events.emit('rbac.session.revoke', { userId: '123' }); // 停用、删除�
 - 路由扫描测试：遍历全部路由，非 Public 且前缀为 /system 或 /monitor 的路由必须声明权限，否则测试失败。
 - 压测：用 autocannon 压测受保护接口，缓存命中时鉴权开销 P95 小于 20ms。
 - 对照第 9 章安全表逐项验收。
-- Dockerfile（多阶段构建、非 root 运行、健康检查）、部署说明、README、导出 OpenAPI 文件供前端生成类型。
+- 部署说明（`node dist/apps/gateway/src/main.js` 直接运行，进程守护方式按目标环境自定）、README、导出 OpenAPI 文件供前端生成类型。
 
 **完成标准**：见第 14 章交付验收清单。
 
@@ -849,7 +849,7 @@ this.events.emit('rbac.session.revoke', { userId: '123' }); // 停用、删除�
 | 层级 | 对象                                                                               | 工具与环境                                                     | 要求                                                                             |
 | ---- | ---------------------------------------------------------------------------------- | -------------------------------------------------------------- | -------------------------------------------------------------------------------- |
 | 单元 | matchPermission、mergeDataScope、buildWhere、tree.util、ancestors 计算、软删除扩展 | Vitest，无外部依赖                                             | permission 目录覆盖率不低于 95%                                                  |
-| 集成 | Service 与真实数据库的交互、事务、唯一约束                                         | Vitest 加独立的 PostgreSQL（docker-compose 或 Testcontainers） | 每个测试文件独立 schema 或事务回滚                                               |
+| 集成 | Service 与真实数据库的交互、事务、唯一约束                                         | Vitest 加独立的 PostgreSQL 实例 | 每个测试文件独立 schema 或事务回滚                                                                              |
 | e2e  | 登录到鉴权到业务接口的完整链路                                                     | Supertest 加真实 PostgreSQL 与单个共享 Redis 服务              | 覆盖第 11 章各 Phase 的完成标准；验证会话、权限缓存和限流共用同一 Redis endpoint |
 | 契约 | 全路由权限声明检查                                                                 | 遍历 Nest 路由元数据                                           | 缺失声明则失败                                                                   |
 | 性能 | 缓存命中时的鉴权开销                                                               | autocannon                                                     | P95 小于 20ms                                                                    |
@@ -868,7 +868,7 @@ this.events.emit('rbac.session.revoke', { userId: '123' }); // 停用、删除�
 - Redis 故障：会话校验与 refresh 失败关闭；登录/验证码限流不能绕过；普通 API 的限流降级行为符合 3.5 的部署约定。
 - 共享限流：两个 gateway 实例对相同 tracker/key 计数时遵守同一额度，Redis 键位于 `nest-admin:throttler:` 命名空间。
 
-**CI 流水线**：lint，然后单测，然后 e2e（用 services 启动 PostgreSQL 与一个 Redis 服务），然后构建镜像。测试可以使用独立临时服务，但应用配置仍只声明一个 Redis endpoint；通过键前缀清理测试数据，避免按功能启动多套 Redis。
+**验收执行方式**：所有检查在本地开发机执行，不引入 CI 流水线，也不把测试环境固化进仓库。固定顺序为 lint → 单测 → e2e；e2e 依赖的 PostgreSQL 与 Redis 由开发者本地启动，应用配置仍只声明一个 Redis endpoint，测试数据通过独立 schema 与键前缀清理，不为不同功能启动多套 Redis。
 
 ## 13. 前端对接要点、风险与演进
 
@@ -902,14 +902,14 @@ this.events.emit('rbac.session.revoke', { userId: '123' }); // 停用、删除�
 
 ## 14. 交付验收清单
 
-- 第 11 章每个 Phase 的完成标准全部满足，CI 全绿。
+- 第 11 章每个 Phase 的完成标准全部满足，lint、单测与 e2e 在本地全绿。
 - 第 12 章必测场景清单全部有对应的自动化测试。
 - 路由扫描测试通过：没有任何未声明权限的管理类接口。
 - 全库搜索确认：不存在明文密码、硬编码密钥、被日志输出的 token。
 - permission 目录单测覆盖率不低于 95%，整体不低于 80%。
 - 缓存命中时鉴权 P95 小于 20ms，已有压测记录。
 - 第 9 章安全表逐项自检并留存记录。
-- Docker 镜像可一键部署，/health 正常，README 与 OpenAPI 文件已提供。
+- 按部署说明可在目标环境正常启动，/health 正常，README 与 OpenAPI 文件已提供。
 
 ## 15. 阶段修改说明与文档维护约定
 
@@ -917,7 +917,7 @@ this.events.emit('rbac.session.revoke', { userId: '123' }); // 停用、删除�
 
 | 阶段                         | 该阶段要做的事                                                                                                                                                                       |
 | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Phase 0 现状盘点与脚手架补齐 | 核实运行环境、启动与部署条件；沿用已有 Prisma 7、配置域、Vitest 和基础库；补齐配置缺失测试、健康检查、验证管线、部署与 CI 文档等实际缺口。                                           |
+| Phase 0 现状盘点与脚手架补齐 | 核实运行环境、启动与部署条件；沿用已有 Prisma 7、配置域、Vitest 和基础库；补齐配置缺失测试、健康检查、验证管线等实际缺口。                                                           |
 | Phase 1 数据层               | 增加 RBAC Prisma 模型、迁移、索引、软删除扩展和幂等 seed；落实权限标识常量并验证模型与权限清单。                                                                                     |
 | Phase 2 基础设施补齐         | 按现有库能力补缺；完善全局验证、响应/异常边界、序列化、树工具；在 `libs/cache` 复用唯一 Redis 连接，提供原子命令和共享 Throttler 存储，保证会话、权限缓存、限流共用一个 Redis 服务。 |
 | Phase 3 认证                 | 实现验证码、登录与失败控制、会话、JWT 守卫、refresh 原子轮换与重放检测、登出；Redis 故障时按本文规定失败关闭。                                                                       |
@@ -927,7 +927,7 @@ this.events.emit('rbac.session.revoke', { userId: '123' }); // 停用、删除�
 | Phase 7 用户管理             | 实现用户查询与 CRUD、角色/职位关联、状态与密码管理、软删除、权限边界及相关会话撤销。                                                                                                 |
 | Phase 8 数据权限             | 实现数据范围 where 构造、上下文传递、列表和单条操作接入，以及授权边界校验。                                                                                                          |
 | Phase 9 审计与在线用户       | 实现操作/登录日志、脱敏和查询清理；实现在线会话查看与强制下线。                                                                                                                      |
-| Phase 10 加固与交付          | 完成路由权限扫描、安全验收、性能测试、部署镜像、健康检查、README 和 OpenAPI 交付。                                                                                                   |
+| Phase 10 加固与交付          | 完成路由权限扫描、安全验收、性能测试、部署说明、健康检查、README 和 OpenAPI 交付。                                                                                                   |
 
 ### 15.1 阶段状态
 
