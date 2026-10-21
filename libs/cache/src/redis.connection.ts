@@ -1,19 +1,28 @@
 import type { RedisConfig } from '@app/config';
 import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { redisConfig } from '@app/config';
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { Redis } from 'ioredis';
+import { PinoLogger } from 'nestjs-pino';
 
-/** 仅由缓存模块持有的单连接；Store 不创建连接，也不负责关闭。 */
+/** RedisModule 持有唯一连接；缓存与命令能力只复用此客户端，不各自创建或关闭连接。 */
 @Injectable()
 export class RedisConnection implements OnModuleInit, OnModuleDestroy {
   readonly client?: Redis;
-  private readonly logger = new Logger(RedisConnection.name);
+  readonly keyPrefix: string;
+  readonly defaultTtl: number;
   private connected = false;
-  private closing?: Promise<void>;
+  private shuttingDown = false;
+  private shutdown?: Promise<void>;
   private warned = false;
 
-  constructor(@Inject(redisConfig.KEY) config: RedisConfig) {
+  constructor(
+    @Inject(redisConfig.KEY) config: RedisConfig,
+    private readonly logger: PinoLogger,
+  ) {
+    this.logger.setContext(RedisConnection.name);
+    this.keyPrefix = config.keyPrefix;
+    this.defaultTtl = config.ttl;
     if (!config.enabled) return;
     this.client = new Redis({
       host: config.host,
@@ -30,11 +39,15 @@ export class RedisConnection implements OnModuleInit, OnModuleDestroy {
       autoResendUnfulfilledCommands: false,
       // 初次失败直接结束启动；运行期保留有上限的重连间隔，不排队业务请求。
       retryStrategy: (attempt) =>
-        this.connected && !this.closing ? Math.min(config.retryDelay * attempt, 30000) : null,
+        this.connected && !this.shuttingDown ? Math.min(config.retryDelay * attempt, 30000) : null,
     });
     this.client.on('ready', this.onReady);
     this.client.on('error', this.onUnavailable);
     this.client.on('close', this.onUnavailable);
+  }
+
+  get isReady(): boolean {
+    return this.client?.status === 'ready';
   }
 
   async onModuleInit(): Promise<void> {
@@ -48,8 +61,9 @@ export class RedisConnection implements OnModuleInit, OnModuleDestroy {
   }
 
   onModuleDestroy(): Promise<void> {
-    this.closing ??= this.close();
-    return this.closing;
+    this.shuttingDown = true;
+    this.shutdown ??= this.close();
+    return this.shutdown;
   }
 
   private async close(): Promise<void> {
@@ -58,7 +72,7 @@ export class RedisConnection implements OnModuleInit, OnModuleDestroy {
     try {
       if (client.status === 'ready') await client.quit();
     } catch {
-      this.logger.warn('Redis 正常关闭失败，强制断开连接');
+      this.logger.warn('Graceful Redis shutdown failed; forcing disconnect');
     } finally {
       client.disconnect();
       client.off('ready', this.onReady);
@@ -70,13 +84,13 @@ export class RedisConnection implements OnModuleInit, OnModuleDestroy {
   private readonly onReady = (): void => {
     this.connected = true;
     this.warned = false;
-    this.logger.log('Redis 缓存连接就绪');
+    this.logger.info('Redis connection is ready');
   };
 
   private readonly onUnavailable = (): void => {
-    if (this.closing || this.warned) return;
+    if (!this.connected || this.shuttingDown || this.warned) return;
     this.warned = true;
     // 不记录客户端异常对象，它可能包含认证命令或服务端返回的敏感内容。
-    this.logger.warn('Redis 缓存连接不可用');
+    this.logger.warn('Redis connection is unavailable');
   };
 }

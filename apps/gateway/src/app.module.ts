@@ -1,4 +1,4 @@
-import { CacheModule } from '@app/cache';
+import { RedisModule } from '@app/cache';
 import { AppConfigModule } from '@app/config';
 import { CoreModule } from '@app/core';
 import { CryptoModule } from '@app/crypto';
@@ -16,7 +16,8 @@ import { SystemModule } from './modules/system/system.module.js';
     // 内部负责：按 NODE_ENV 加载分层 YAML、启动校验、注册各配置域。
     AppConfigModule.forRoot(),
     LoggerModule,
-    CacheModule,
+    // 全应用只装配一个 RedisModule；各能力通过它导出的连接复用同一 ioredis 客户端。
+    RedisModule,
     CryptoModule,
     // core 负责全局异常过滤等 HTTP 基础设施，只在这里导入一次。
     CoreModule,
