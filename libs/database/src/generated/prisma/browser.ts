@@ -18,7 +18,57 @@ export { Prisma }
 export * as $Enums from './enums.js'
 export * from './enums.js';
 /**
+ * Model Dept
+ * 系统部门表
+ */
+export type Dept = Prisma.DeptModel
+/**
+ * Model LoginLog
+ * 登录日志表
+ */
+export type LoginLog = Prisma.LoginLogModel
+/**
+ * Model OperLog
+ * 操作日志表
+ */
+export type OperLog = Prisma.OperLogModel
+/**
+ * Model Menu
+ * 系统菜单表
+ */
+export type Menu = Prisma.MenuModel
+/**
+ * Model Post
+ * 系统职位表
+ */
+export type Post = Prisma.PostModel
+/**
+ * Model UserRole
+ * 用户与角色关联
+ */
+export type UserRole = Prisma.UserRoleModel
+/**
+ * Model UserPost
+ * 用户与职位关联
+ */
+export type UserPost = Prisma.UserPostModel
+/**
+ * Model RoleMenu
+ * 角色与菜单关联
+ */
+export type RoleMenu = Prisma.RoleMenuModel
+/**
+ * Model RoleDept
+ * 自定义数据范围的角色与部门关联
+ */
+export type RoleDept = Prisma.RoleDeptModel
+/**
+ * Model Role
+ * 系统角色表
+ */
+export type Role = Prisma.RoleModel
+/**
  * Model User
- * 
+ * 系统用户表
  */
 export type User = Prisma.UserModel

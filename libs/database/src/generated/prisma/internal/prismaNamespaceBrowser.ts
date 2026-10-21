@@ -51,6 +51,16 @@ export const AnyNull = runtime.AnyNull
 
 
 export const ModelName = {
+  Dept: 'Dept',
+  LoginLog: 'LoginLog',
+  OperLog: 'OperLog',
+  Menu: 'Menu',
+  Post: 'Post',
+  UserRole: 'UserRole',
+  UserPost: 'UserPost',
+  RoleMenu: 'RoleMenu',
+  RoleDept: 'RoleDept',
+  Role: 'Role',
   User: 'User'
 } as const
 
@@ -70,8 +80,151 @@ export const TransactionIsolationLevel = runtime.makeStrictEnum({
 export type TransactionIsolationLevel = (typeof TransactionIsolationLevel)[keyof typeof TransactionIsolationLevel]
 
 
+export const DeptScalarFieldEnum = {
+  deptId: 'deptId',
+  parentId: 'parentId',
+  ancestors: 'ancestors',
+  deptName: 'deptName',
+  orderNum: 'orderNum',
+  leaderId: 'leaderId',
+  status: 'status',
+  delFlag: 'delFlag',
+  createBy: 'createBy',
+  createTime: 'createTime',
+  updateBy: 'updateBy',
+  updateTime: 'updateTime',
+  remark: 'remark'
+} as const
+
+export type DeptScalarFieldEnum = (typeof DeptScalarFieldEnum)[keyof typeof DeptScalarFieldEnum]
+
+
+export const LoginLogScalarFieldEnum = {
+  infoId: 'infoId',
+  userName: 'userName',
+  ipaddr: 'ipaddr',
+  userAgent: 'userAgent',
+  status: 'status',
+  msg: 'msg',
+  loginTime: 'loginTime'
+} as const
+
+export type LoginLogScalarFieldEnum = (typeof LoginLogScalarFieldEnum)[keyof typeof LoginLogScalarFieldEnum]
+
+
+export const OperLogScalarFieldEnum = {
+  operId: 'operId',
+  title: 'title',
+  method: 'method',
+  requestMethod: 'requestMethod',
+  operUserId: 'operUserId',
+  operUrl: 'operUrl',
+  operIp: 'operIp',
+  operParam: 'operParam',
+  status: 'status',
+  errorMsg: 'errorMsg',
+  costTime: 'costTime',
+  operTime: 'operTime'
+} as const
+
+export type OperLogScalarFieldEnum = (typeof OperLogScalarFieldEnum)[keyof typeof OperLogScalarFieldEnum]
+
+
+export const MenuScalarFieldEnum = {
+  menuId: 'menuId',
+  parentId: 'parentId',
+  menuName: 'menuName',
+  menuType: 'menuType',
+  orderNum: 'orderNum',
+  path: 'path',
+  component: 'component',
+  query: 'query',
+  isFrame: 'isFrame',
+  isCache: 'isCache',
+  visible: 'visible',
+  status: 'status',
+  perms: 'perms',
+  icon: 'icon',
+  createBy: 'createBy',
+  createTime: 'createTime',
+  updateBy: 'updateBy',
+  updateTime: 'updateTime',
+  remark: 'remark'
+} as const
+
+export type MenuScalarFieldEnum = (typeof MenuScalarFieldEnum)[keyof typeof MenuScalarFieldEnum]
+
+
+export const PostScalarFieldEnum = {
+  postId: 'postId',
+  postCode: 'postCode',
+  postName: 'postName',
+  orderNum: 'orderNum',
+  status: 'status',
+  delFlag: 'delFlag',
+  createBy: 'createBy',
+  createTime: 'createTime',
+  updateBy: 'updateBy',
+  updateTime: 'updateTime',
+  remark: 'remark'
+} as const
+
+export type PostScalarFieldEnum = (typeof PostScalarFieldEnum)[keyof typeof PostScalarFieldEnum]
+
+
+export const UserRoleScalarFieldEnum = {
+  userId: 'userId',
+  roleId: 'roleId'
+} as const
+
+export type UserRoleScalarFieldEnum = (typeof UserRoleScalarFieldEnum)[keyof typeof UserRoleScalarFieldEnum]
+
+
+export const UserPostScalarFieldEnum = {
+  userId: 'userId',
+  postId: 'postId'
+} as const
+
+export type UserPostScalarFieldEnum = (typeof UserPostScalarFieldEnum)[keyof typeof UserPostScalarFieldEnum]
+
+
+export const RoleMenuScalarFieldEnum = {
+  roleId: 'roleId',
+  menuId: 'menuId'
+} as const
+
+export type RoleMenuScalarFieldEnum = (typeof RoleMenuScalarFieldEnum)[keyof typeof RoleMenuScalarFieldEnum]
+
+
+export const RoleDeptScalarFieldEnum = {
+  roleId: 'roleId',
+  deptId: 'deptId'
+} as const
+
+export type RoleDeptScalarFieldEnum = (typeof RoleDeptScalarFieldEnum)[keyof typeof RoleDeptScalarFieldEnum]
+
+
+export const RoleScalarFieldEnum = {
+  roleId: 'roleId',
+  roleName: 'roleName',
+  roleKey: 'roleKey',
+  orderNum: 'orderNum',
+  dataScope: 'dataScope',
+  status: 'status',
+  delFlag: 'delFlag',
+  createBy: 'createBy',
+  createTime: 'createTime',
+  updateBy: 'updateBy',
+  updateTime: 'updateTime',
+  remark: 'remark'
+} as const
+
+export type RoleScalarFieldEnum = (typeof RoleScalarFieldEnum)[keyof typeof RoleScalarFieldEnum]
+
+
 export const UserScalarFieldEnum = {
   userId: 'userId',
+  deptId: 'deptId',
   userName: 'userName',
   nickName: 'nickName',
   email: 'email',
@@ -82,11 +235,11 @@ export const UserScalarFieldEnum = {
   delFlag: 'delFlag',
   loginIp: 'loginIp',
   loginDate: 'loginDate',
-  createDept: 'createDept',
   createBy: 'createBy',
   createTime: 'createTime',
   updateBy: 'updateBy',
   updateTime: 'updateTime',
+  createDept: 'createDept',
   remark: 'remark'
 } as const
 

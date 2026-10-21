@@ -8,5 +8,15 @@
  *
  * 🟢 You can import this file directly.
  */
+export type * from './models/Dept.js'
+export type * from './models/LoginLog.js'
+export type * from './models/OperLog.js'
+export type * from './models/Menu.js'
+export type * from './models/Post.js'
+export type * from './models/UserRole.js'
+export type * from './models/UserPost.js'
+export type * from './models/RoleMenu.js'
+export type * from './models/RoleDept.js'
+export type * from './models/Role.js'
 export type * from './models/User.js'
 export type * from './commonInputTypes.js'
